@@ -7,6 +7,8 @@ import "./index.css";
 // Import page components
 import Dashboard from "./pages/dashboard.jsx";
 import HomePage from "./pages/homePage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
 
 // Auth context provider
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -20,6 +22,8 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/login" element={<LoginPage />} />     
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </main>
       <footer className="bg-white shadow-inner py-4 mt-10">
