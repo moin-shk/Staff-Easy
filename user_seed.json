@@ -1,0 +1,31 @@
+[
+    {
+      "email": "moin.shaikh@gmail.com",
+      "username": "moin shaikh",
+      "password": "Moin123!",
+      "role": "admin",
+      "createdAt": "2025-04-09T00:00:00.000Z"
+    },
+    {
+      "email": "evan.di.placedo@gmail.com",
+      "username": "evan di placedo",
+      "password": "Evan123!",
+      "role": "admin",
+      "createdAt": "2025-04-09T00:00:00.000Z"
+    },
+    {
+      "email": "nikita.kristenko@gmail.com",
+      "username": "nikita kristenko",
+      "password": "Nikita123!",
+      "role": "manager",
+      "createdAt": "2025-04-09T00:00:00.000Z"
+    },
+    {
+      "email": "caleb.irvene@gmail.com",
+      "username": "caleb irvene",
+      "password": "Caleb123!",
+      "role": "manager",
+      "createdAt": "2025-04-09T00:00:00.000Z"
+    }
+  ]
+  

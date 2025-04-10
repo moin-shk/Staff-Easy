@@ -1,0 +1,160 @@
+[
+    {
+      "name": "Alice Johnson",
+      "position": "HR Manager",
+      "department": "Human Resources",
+      "email": "alice.johnson@example.com",
+      "phone": "555-0101",
+      "salary": 60000,
+      "salaryHistory": [
+        {
+          "amount": 50000,
+          "effectiveDate": "2023-01-01T00:00:00.000Z",
+          "reason": "Starting salary"
+        },
+        {
+          "amount": 55000,
+          "effectiveDate": "2023-12-01T00:00:00.000Z",
+          "reason": "Annual increment"
+        }
+      ],
+      "timeOffRequests": [
+        {
+          "startDate": "2024-06-15T00:00:00.000Z",
+          "endDate": "2024-06-20T00:00:00.000Z",
+          "status": "approved",
+          "reason": "Family vacation"
+        }
+      ],
+      "reports": [
+        {
+          "reportDate": "2024-03-01T00:00:00.000Z",
+          "details": "Quarterly performance review: Exceeded expectations."
+        }
+      ],
+      "increments": [
+        {
+          "incrementDate": "2023-12-01T00:00:00.000Z",
+          "newSalary": 55000,
+          "reason": "Annual performance increase"
+        },
+        {
+          "incrementDate": "2024-12-01T00:00:00.000Z",
+          "newSalary": 60000,
+          "reason": "Promotion and performance bonus"
+        }
+      ]
+    },
+    {
+      "name": "Bob Smith",
+      "position": "Software Engineer",
+      "department": "Engineering",
+      "email": "bob.smith@example.com",
+      "phone": "555-0202",
+      "salary": 75000,
+      "salaryHistory": [
+        {
+          "amount": 70000,
+          "effectiveDate": "2023-02-01T00:00:00.000Z",
+          "reason": "New hire salary"
+        }
+      ],
+      "timeOffRequests": [
+        {
+          "startDate": "2024-07-10T00:00:00.000Z",
+          "endDate": "2024-07-15T00:00:00.000Z",
+          "status": "pending",
+          "reason": "Personal reasons"
+        }
+      ],
+      "reports": [
+        {
+          "reportDate": "2024-04-01T00:00:00.000Z",
+          "details": "Mid-year performance review: Meets expectations."
+        }
+      ],
+      "increments": []
+    },
+    {
+      "name": "Carol White",
+      "position": "Sales Executive",
+      "department": "Sales",
+      "email": "carol.white@example.com",
+      "phone": "555-0303",
+      "salary": 65000,
+      "salaryHistory": [
+        {
+          "amount": 60000,
+          "effectiveDate": "2023-03-01T00:00:00.000Z",
+          "reason": "Starting salary"
+        },
+        {
+          "amount": 63000,
+          "effectiveDate": "2024-01-15T00:00:00.000Z",
+          "reason": "Performance bonus"
+        }
+      ],
+      "timeOffRequests": [
+        {
+          "startDate": "2024-05-05T00:00:00.000Z",
+          "endDate": "2024-05-07T00:00:00.000Z",
+          "status": "approved",
+          "reason": "Medical leave"
+        },
+        {
+          "startDate": "2024-08-01T00:00:00.000Z",
+          "endDate": "2024-08-03T00:00:00.000Z",
+          "status": "rejected",
+          "reason": "Project deadline"
+        }
+      ],
+      "reports": [
+        {
+          "reportDate": "2024-06-01T00:00:00.000Z",
+          "details": "Monthly sales target achieved."
+        }
+      ],
+      "increments": [
+        {
+          "incrementDate": "2024-02-01T00:00:00.000Z",
+          "newSalary": 63000,
+          "reason": "Performance bonus"
+        }
+      ]
+    },
+    {
+      "name": "David Brown",
+      "position": "Customer Support Specialist",
+      "department": "Support",
+      "email": "david.brown@example.com",
+      "phone": "555-0404",
+      "salary": 45000,
+      "salaryHistory": [
+        {
+          "amount": 42000,
+          "effectiveDate": "2023-04-01T00:00:00.000Z",
+          "reason": "Starting salary"
+        },
+        {
+          "amount": 45000,
+          "effectiveDate": "2024-03-01T00:00:00.000Z",
+          "reason": "Annual raise"
+        }
+      ],
+      "timeOffRequests": [],
+      "reports": [
+        {
+          "reportDate": "2024-03-20T00:00:00.000Z",
+          "details": "Customer feedback: Excellent service."
+        }
+      ],
+      "increments": [
+        {
+          "incrementDate": "2024-03-01T00:00:00.000Z",
+          "newSalary": 45000,
+          "reason": "Annual raise"
+        }
+      ]
+    }
+  ]
+  

@@ -1,23 +1,29 @@
-import { useState } from "react";
+import { useState } from 'react';
+import axios from 'axios';
 
-// This is a simple mock authentication hook for testing
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post('/api/login', { email, password });
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+      return true;
+    } catch (error) {
+      console.error('Login error:', error.response?.data);
+      return false;
+    }
+  };
+
   const logout = async () => {
     setUser(null);
     setIsAuthenticated(false);
+    // Optionally, also send a request to the backend to clear the session.
   };
 
-  const login = async (username, password) => {
-    // Mock login. you'd call an API
-    setUser({ username, role: "admin" });
-    setIsAuthenticated(true);
-    return true;
-  };
-
-  return { user, isAuthenticated, logout, login };
+  return { user, isAuthenticated, login, logout };
 };
 
 export default useAuth;
