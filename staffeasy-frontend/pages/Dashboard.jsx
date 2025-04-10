@@ -1,6 +1,6 @@
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 // Mock data for dashboard cards
 const dashboardCards = [
@@ -80,18 +80,51 @@ const recentActivity = [
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
+  
+  console.log('Dashboard render:', { isAuthenticated, user });
+  
+  // Check for access denied message from protected route
+  const accessDenied = location.state?.accessDenied;
+  const accessMessage = location.state?.message;
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  // Get user info from localStorage as fallback if auth context fails
+  let username = user?.username || 'User';
+  try {
+    if (!user) {
+      const storedUser = JSON.parse(localStorage.getItem('staffeasy_user'));
+      if (storedUser) {
+        username = storedUser.username || storedUser.email || 'User';
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing stored user', e);
   }
 
   return (
     <div className="max-w-6xl mx-auto">
+      {/* Access Denied Message */}
+      {accessDenied && (
+        <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                {accessMessage || 'You do not have permission to access the requested page.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Section */}
       <section className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-          Welcome back, {user?.username || 'User'}
+          Welcome back, {username}
         </h1>
         <p className="text-gray-600">
           Here's what's happening with your organization today.

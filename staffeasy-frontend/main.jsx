@@ -5,28 +5,42 @@ import Navbar from "./navbar.jsx";
 import "./index.css";
 
 // Import page components
-import Dashboard from "./pages/dashboard.jsx";
-import HomePage from "./pages/homePage.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import HomePage from "./pages/HomePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 
 // Auth context provider
 import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // App component with routing
 const App = () => {
   return (
-    <div className="app min-h-screen bg-gray-50">
+    <div className="app min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <main className="container mx-auto p-4 pt-6">
+      <main className="container mx-auto p-4 pt-6 flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/login" element={<LoginPage />} />     
           <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Protected Routes */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* Catch-all route for undefined routes */}
+          <Route path="*" element={
+            <div className="text-center py-20">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">Page Not Found</h2>
+              <p className="text-gray-600 mb-8">The page you're looking for doesn't exist or has been moved.</p>
+              <a href="/" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors">
+                Go Home
+              </a>
+            </div>
+          } />
         </Routes>
       </main>
-      <footer className="bg-white shadow-inner py-4 mt-10">
+      <footer className="bg-white shadow-inner py-4 mt-auto">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
           <p>© 2025 StaffEasy. All rights reserved.</p>
           <p className="mt-1">Developed by Tech Titans - Web Dev 2 Project</p>
@@ -39,10 +53,10 @@ const App = () => {
 // Render the application
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <App />
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

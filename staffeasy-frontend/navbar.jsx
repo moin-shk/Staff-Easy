@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from './context/AuthContext';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -9,6 +9,7 @@ const Navbar = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   
   const handleLogout = async () => {
+    console.log('Logging out...');
     await logout();
     navigate('/login');
   };
@@ -20,6 +21,8 @@ const Navbar = () => {
   const toggleProfileDropdown = () => {
     setProfileDropdownOpen(!profileDropdownOpen);
   };
+
+  console.log('Auth state in navbar:', { isAuthenticated, user });
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -111,7 +114,7 @@ const Navbar = () => {
                   >
                     <span className="sr-only">Open user menu</span>
                     <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                      {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                      {user?.username?.charAt(0) || user?.email?.charAt(0) || 'U'}
                     </div>
                   </button>
                 </div>
@@ -125,6 +128,12 @@ const Navbar = () => {
                     aria-labelledby="user-menu-button"
                     tabIndex="-1"
                   >
+                    <div
+                      className="block px-4 py-2 text-sm text-gray-700"
+                      role="menuitem"
+                    >
+                      Signed in as <strong>{user?.username || user?.email}</strong>
+                    </div>
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -285,12 +294,12 @@ const Navbar = () => {
               <div className="flex items-center px-4">
                 <div className="flex-shrink-0">
                   <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                    {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                    {user?.username?.charAt(0) || user?.email?.charAt(0) || 'U'}
                   </div>
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">
-                    {user?.name || 'User'}
+                    {user?.username || 'User'}
                   </div>
                   <div className="text-sm font-medium text-gray-500">
                     {user?.email || ''}
