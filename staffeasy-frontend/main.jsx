@@ -9,10 +9,13 @@ import Dashboard from "./pages/Dashboard.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
+import Employees from "./pages/Employees.jsx";
+import AddEmployee from "./pages/AddEmployee.jsx";
+import EditEmployee from "./pages/EditEmployee.jsx";
+import TeamsPage from "./pages/TeamsPage.jsx";
 
 // Auth context provider
 import { AuthProvider } from "./context/AuthContext.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // App component with routing
 const App = () => {
@@ -27,6 +30,10 @@ const App = () => {
           
           {/* Protected Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/employees" element={<Employees />} />
+          <Route path="/add-employee" element={<AddEmployee />} />
+          <Route path="/edit-employee/:id" element={<EditEmployee />} />
+          <Route path="/teams" element={<TeamsPage />} />
           
           {/* Catch-all route for undefined routes */}
           <Route path="*" element={

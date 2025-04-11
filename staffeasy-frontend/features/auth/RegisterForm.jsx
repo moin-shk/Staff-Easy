@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { useAuth } from '../../hooks/useAuth';
-import React from 'react';
+import { supabase } from '../../supabaseClient';
 
 export default function RegisterForm() {
   const [form, setForm] = useState({
@@ -13,19 +12,16 @@ export default function RegisterForm() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user starts typing again
     if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       setError('All fields are required');
       return;
@@ -41,37 +37,30 @@ export default function RegisterForm() {
       return;
     }
     
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      // Since this is a mock implementation without a real backend registration,
-      // we'll just log the registration info and then log the user in
-      console.log('Registration data:', {
-        name: form.name,
-        email: form.email,
-        password: form.password
-      });
-      
-      // In a real application, you would call a registration API here
-      // For now, we'll just use the mock login function
-      const username = form.email.split('@')[0];
-      
-      // Simulate a successful registration by logging in
-      const success = await login(username, form.password);
-      
-      if (success) {
-        // Redirect to dashboard on successful login
-        navigate('/dashboard');
-      } else {
-        setError('Registration failed');
-      }
-    } catch (err) {
-      setError('An error occurred during registration. Please try again.');
-      console.error('Registration error:', err);
-    } finally {
-      setIsLoading(false);
+    setIsLoading(true);
+    setError('');
+
+    // Insert a new record into the users table (role defaults to 'user')
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          username: form.name,
+          email: form.email,
+          password: form.password,
+          role: 'user',
+          created_at: new Date().toISOString()
+        }
+      ]);
+
+    if (error) {
+      console.error('Error during registration:', error);
+      setError('Registration failed. Please try again.');
+    } else {
+      // Optionally, you can save the returned user data locally if needed.
+      navigate('/dashboard');
     }
+    setIsLoading(false);
   };
 
   return (
