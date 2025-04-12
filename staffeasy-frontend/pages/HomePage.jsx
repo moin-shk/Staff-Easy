@@ -48,7 +48,7 @@ const HomePage = () => {
           <p className="text-gray-600">Everything you need to manage your team effectively</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 px-4">
+        <div className="grid md:grid-cols-2 gap-8 px-4">
           <FeatureCard
             title="Employee Management"
             description="Create, update, and track employee information in one central location."
@@ -60,19 +60,9 @@ const HomePage = () => {
             icon="📅"
           />
           <FeatureCard
-            title="Payroll Processing"
-            description="Simplify payroll management with integrated payment tracking."
-            icon="💰"
-          />
-          <FeatureCard
             title="Team Structure"
             description="Organize and visualize your company's reporting structure."
             icon="🏢"
-          />
-          <FeatureCard
-            title="Analytics Dashboard"
-            description="Access insights and metrics to make informed business decisions."
-            icon="📊"
           />
           <FeatureCard
             title="Role-Based Access"
@@ -95,8 +85,7 @@ const HomePage = () => {
             features={[
               "Manage employee information",
               "Organize team structure",
-              "Assign roles to employees",
-              "Access company analytics"
+              "Assign roles to employees"
             ]}
             bgColor="bg-blue-50"
             textColor="text-blue-700"
@@ -106,7 +95,6 @@ const HomePage = () => {
             userType="Managers"
             features={[
               "Approve time-off requests",
-              "Process employee payroll",
               "Monitor attendance",
               "Manage team performance"
             ]}
@@ -118,8 +106,6 @@ const HomePage = () => {
             userType="Employees"
             features={[
               "Submit time-off requests",
-              "View paycheck information",
-              "Access tax documents",
               "Request position changes"
             ]}
             bgColor="bg-purple-50"

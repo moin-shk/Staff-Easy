@@ -47,7 +47,7 @@ const Dashboard = () => {
   const accessDenied = location.state?.accessDenied;
   const accessMessage = location.state?.message;
 
-  // --- ADMIN & MANAGER DASHBOARD LOGIC ---
+  // --- ADMIN & MANAGER DASHBOARD LOGIC (unchanged) ---
   const [employeesCount, setEmployeesCount] = useState(0);
   const [teamsCount, setTeamsCount] = useState(0);
   const [pendingTimeOff, setPendingTimeOff] = useState(0);
@@ -59,7 +59,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (user && (user.role === 'admin' || user.role === 'manager')) {
       async function fetchMetricsAndActivity() {
-        // Employee count
+        // Employee count from employees table
         const { count: empCount, error: countError } = await supabase
           .from('employees')
           .select('id', { head: true, count: 'exact' });
@@ -80,18 +80,18 @@ const Dashboard = () => {
           console.error('Error fetching salaries:', salaryError);
         }
 
-        // Teams count (distinct teams)
-        const { data: empTeams, error: teamError } = await supabase
-          .from('employees')
+        // Teams count: Fetch teams info from the teams table, then count distinct team names.
+        const { data: teamsData, error: teamsError } = await supabase
+          .from('teams')
           .select('team');
-        if (!teamError && empTeams) {
-          const distinctTeams = new Set(empTeams.map(emp => emp.team).filter(team => team));
+        if (!teamsError && teamsData) {
+          const distinctTeams = new Set(teamsData.map(t => t.team).filter(team => team));
           setTeamsCount(distinctTeams.size);
         } else {
-          console.error('Error fetching teams:', teamError);
+          console.error('Error fetching teams:', teamsError);
         }
 
-        // Pending time-off requests (from time_off_requests table)
+        // Pending time-off requests from time_off_requests table
         const { count: toCount, error: toError } = await supabase
           .from('time_off_requests')
           .select('id', { head: true, count: 'exact' })
@@ -112,7 +112,6 @@ const Dashboard = () => {
           console.error('Error fetching activity:', actError);
           setErrorActivity('Failed to load recent activity');
         } else {
-          // Filter out time-off request updates if needed.
           const filteredActivity = actData.filter(act => act.type !== 'Time-off Request');
           setActivity(filteredActivity);
         }
@@ -127,6 +126,16 @@ const Dashboard = () => {
   const [loadingMyEmp, setLoadingMyEmp] = useState(true);
   const [errorMyEmp, setErrorMyEmp] = useState('');
   const [alertMsg, setAlertMsg] = useState(null);
+
+  // New state for time-off request modal
+  const [showTimeOffModal, setShowTimeOffModal] = useState(false);
+  const [requestReason, setRequestReason] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  // New state for user teams grouping: an object where keys are team names and values are arrays of members
+  const [userTeamGroups, setUserTeamGroups] = useState({});
+  // New state for open/closed dropdown for user teams
+  const [openUserTeams, setOpenUserTeams] = useState({});
 
   useEffect(() => {
     if (user && user.role === 'user') {
@@ -148,22 +157,111 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  // For a normal user, update time_off_requests (instead of the employees table)
-  const handleRequestTimeOff = async () => {
-    if (!myEmployee) return;
-    const { error } = await supabase
-      .from('time_off_requests')
-      .update({ timeoff_requested: true })
-      .eq('employee_id', myEmployee.id);
-    if (error) {
-      setAlertMsg({ type: 'error', text: 'Failed to request time off.' });
-    } else {
-      setAlertMsg({ type: 'success', text: 'Time off requested successfully.' });
-      // Optionally, update local state if you store the current request status
-      setMyEmployee({ ...myEmployee, timeoff_request: true });
+  // After myEmployee is fetched, load all teams that the employee is a part of
+  useEffect(() => {
+    if (myEmployee) {
+      async function fetchUserTeams() {
+        // Get all teams rows that have a team value equal to one of the teams that the employee belongs to.
+        // First, fetch the teams row(s) where the employee is a member.
+        const { data, error } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("employee_id", myEmployee.id);
+        if (error) {
+          setAlertMsg({ type: 'error', text: 'Failed to load your teams.' });
+          return;
+        }
+        if (data) {
+          // Get distinct team names
+          const distinctTeamNames = Array.from(new Set(data.map(item => item.team)));
+          // For each distinct team, fetch all rows belonging to that team.
+          let groups = {};
+          await Promise.all(
+            distinctTeamNames.map(async (teamName) => {
+              const { data: groupData, error: groupError } = await supabase
+                .from("teams")
+                .select("*")
+                .eq("team", teamName);
+              if (!groupError && groupData) {
+                groups[teamName] = groupData;
+              }
+            })
+          );
+          setUserTeamGroups(groups);
+          // Initialize open/closed state for each team as closed (false)
+          const openStates = {};
+          distinctTeamNames.forEach(teamName => {
+            openStates[teamName] = false;
+          });
+          setOpenUserTeams(openStates);
+        }
+      }
+      fetchUserTeams();
+    }
+  }, [myEmployee]);
+
+  // Toggle dropdown for a specific team group
+  const toggleUserTeamGroup = (teamName) => {
+    setOpenUserTeams((prev) => ({
+      ...prev,
+      [teamName]: !prev[teamName],
+    }));
+  };
+
+  // Open the time-off request modal for a specific team (from the user's teams section)
+  // This modal appears in the profile section only (as requested, Request Time Off remains in profile)
+  const handleOpenTimeOffModal = () => {
+    setRequestReason("");
+    setStartDate("");
+    setEndDate("");
+    setShowTimeOffModal(true);
+  };
+
+  // Submit a time-off request (for normal users)
+  // Here, we store the start and end dates concatenated into the reason column.
+  const handleSubmitTimeOffRequest = async (e) => {
+    e.preventDefault();
+    if (!requestReason || !startDate || !endDate) {
+      setAlertMsg({ type: 'error', text: 'Please fill in all fields for your time-off request.' });
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    if (startDate < today) {
+      setAlertMsg({ type: 'error', text: 'The start date cannot be in the past.' });
+      return;
+    }
+    if (endDate < startDate) {
+      setAlertMsg({ type: 'error', text: 'The end date cannot be before the start date.' });
+      return;
+    }
+    const fullReason = `${requestReason} (From: ${startDate} To: ${endDate})`;
+
+    try {
+      const { error } = await supabase
+        .from('time_off_requests')
+        .insert([{
+          employee_id: myEmployee.id,
+          // Optionally, if you want to record which team the request applies to,
+          // you can add a "team" field here. For example, if the employee belongs to only one team:
+          // team: myEmployee.team,
+          timeoff_requested: true,
+          reason: fullReason
+        }]);
+      if (error) {
+        setAlertMsg({ type: 'error', text: 'Failed to submit time off request.' });
+      } else {
+        setAlertMsg({ type: 'success', text: 'Time off request submitted successfully.' });
+        // Update local employee state if needed.
+        setMyEmployee({ ...myEmployee, timeoff_request: 'requested' });
+        setShowTimeOffModal(false);
+      }
+    } catch (err) {
+      console.error("Unexpected error submitting time off request:", err);
+      setAlertMsg({ type: 'error', text: 'Unexpected error occurred while submitting your request.' });
     }
   };
 
+  // Withdraw a time-off request for a normal user (global withdrawal)
   const handleWithdrawTimeOff = async () => {
     if (!myEmployee) return;
     const { error } = await supabase
@@ -180,7 +278,6 @@ const Dashboard = () => {
 
   // --- RENDERING ---
   if (user && (user.role === 'admin' || user.role === 'manager')) {
-    // For admins/managers, show complete dashboard metrics
     const dynamicDashboardCards = [
       { title: 'Employees', value: employeesCount, icon: '👥', bgColor: 'bg-blue-50', path: '/employees' },
       { title: 'Teams', value: teamsCount, icon: '🏢', bgColor: 'bg-green-50', path: '/teams' },
@@ -216,8 +313,12 @@ const Dashboard = () => {
           </div>
         )}
         <section className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Welcome back, {username}</h1>
-          <p className="text-gray-600">Here's what's happening with your organization today.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+            Welcome back, {username}
+          </h1>
+          <p className="text-gray-600">
+            Here's what's happening with your organization today.
+          </p>
         </section>
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {dynamicDashboardCards.map((card, index) => (
@@ -226,15 +327,14 @@ const Dashboard = () => {
         </section>
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-          <div className="bg-white rounded-lg shadow-md p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-md p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <QuickAction icon="👤" title="Add Employee" path="/add-employee" />
             <QuickAction icon="🗂️" title="Manage Teams" path="/teams" />
             <QuickAction icon="📋" title="Review Time-off" path="/time-off" />
-            <QuickAction icon="📊" title="View Analytics" path="/analytics" />
           </div>
         </section>
         <section className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
           {loadingActivity ? (
             <p className="text-gray-600">Loading recent activity...</p>
           ) : errorActivity ? (
@@ -264,11 +364,21 @@ const Dashboard = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {activity.map(act => (
                     <tr key={act.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{act.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{act.action}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{act.subject}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(act.timestamp).toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{act.user_name || act.user_email || 'N/A'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {act.type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {act.action}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {act.subject}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(act.timestamp).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {act.user_name || act.user_email || 'N/A'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -278,78 +388,9 @@ const Dashboard = () => {
             <p className="text-gray-600">No recent activity found.</p>
           )}
         </section>
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Employees</h2>
-          {/* You might include a table here for admin/manager view, as before */}
-          {/* ... */}
-        </section>
       </div>
     );
   } else if (user && user.role === 'user') {
-    // NORMAL USER DASHBOARD: Show personal employee data and time-off request options using the new time_off_requests table.
-    const [myEmployee, setMyEmployee] = useState(null);
-    const [loadingMyEmp, setLoadingMyEmp] = useState(true);
-    const [errorMyEmp, setErrorMyEmp] = useState('');
-    const [alertMsg, setAlertMsg] = useState(null);
-    const [myTimeoff, setMyTimeoff] = useState(false); // local state for time-off request
-
-    useEffect(() => {
-      async function fetchMyEmployee() {
-        const { data, error } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('email', user.email)
-          .single();
-        if (error) {
-          console.error('Error fetching your employee data:', error);
-          setErrorMyEmp('Could not fetch your employee data.');
-        } else {
-          setMyEmployee(data);
-          // Fetch corresponding time_off_request row for this employee
-          const { data: tofData, error: tofError } = await supabase
-            .from('time_off_requests')
-            .select('timeoff_requested')
-            .eq('employee_id', data.id)
-            .single();
-          if (tofError) {
-            console.error('Error fetching time-off request status:', tofError);
-          } else if (tofData) {
-            setMyTimeoff(tofData.timeoff_requested);
-          }
-        }
-        setLoadingMyEmp(false);
-      }
-      fetchMyEmployee();
-    }, [user.email]);
-
-    const handleRequestTimeOff = async () => {
-      if (!myEmployee) return;
-      const { error } = await supabase
-        .from('time_off_requests')
-        .update({ timeoff_requested: true })
-        .eq('employee_id', myEmployee.id);
-      if (error) {
-        setAlertMsg({ type: 'error', text: 'Failed to request time off.' });
-      } else {
-        setMyTimeoff(true);
-        setAlertMsg({ type: 'success', text: 'Time off requested successfully.' });
-      }
-    };
-
-    const handleWithdrawTimeOff = async () => {
-      if (!myEmployee) return;
-      const { error } = await supabase
-        .from('time_off_requests')
-        .update({ timeoff_requested: false })
-        .eq('employee_id', myEmployee.id);
-      if (error) {
-        setAlertMsg({ type: 'error', text: 'Failed to withdraw time off request.' });
-      } else {
-        setMyTimeoff(false);
-        setAlertMsg({ type: 'success', text: 'Time off request withdrawn successfully.' });
-      }
-    };
-
     if (loadingMyEmp) {
       return <div className="max-w-4xl mx-auto p-4">Loading your data...</div>;
     }
@@ -362,7 +403,8 @@ const Dashboard = () => {
 
     return (
       <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white shadow-lg rounded-lg p-8">
+        {/* Profile Section */}
+        <div className="bg-white shadow-lg rounded-lg p-8 mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Your Profile</h2>
           {alertMsg && (
             <div className={`mb-4 p-4 rounded ${alertMsg.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -379,14 +421,15 @@ const Dashboard = () => {
             <div>
               <p className="text-gray-700"><strong>Phone:</strong> {myEmployee.phone || 'N/A'}</p>
               <p className="text-gray-700"><strong>Salary:</strong> {myEmployee.salary ? `$${myEmployee.salary}` : 'N/A'}</p>
-              <p className="text-gray-700"><strong>Team:</strong> {myEmployee.team || 'N/A'}</p>
-              <p className="text-gray-700"><strong>Time-off Request:</strong> {myTimeoff ? 'Requested' : 'Not Requested'}</p>
+              <p className="text-gray-700"><strong>Teams:</strong> {myEmployee.team || 'N/A'}</p>
+              <p className="text-gray-700"><strong>Time-off Request:</strong> {myEmployee.timeoff_request ? 'Requested' : 'Not Requested'}</p>
             </div>
           </div>
-          <div className="mt-6 flex space-x-4">
-            {!myTimeoff ? (
+          {/* Request Time Off button remains in the profile section */}
+          <div className="mt-6">
+            { !myEmployee.timeoff_request ? (
               <button
-                onClick={handleRequestTimeOff}
+                onClick={handleOpenTimeOffModal}
                 className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 Request Time Off
@@ -401,10 +444,97 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Teams Section: Display dropdowns for each team the user is part of */}
+        <section className="mb-8">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Your Teams</h2>
+          {Object.keys(userTeamGroups).length === 0 ? (
+            <p>You are not part of any teams.</p>
+          ) : (
+            <div className="space-y-4">
+              {Object.keys(userTeamGroups).map(teamName => (
+                <div key={teamName} className="bg-white p-4 rounded shadow border border-gray-200">
+                  <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleUserTeamGroup(teamName)}>
+                    <span className="text-lg font-medium text-gray-800">{teamName}</span>
+                    <span>{openUserTeams[teamName] ? '-' : '+'}</span>
+                  </div>
+                  {openUserTeams[teamName] && (
+                    <ul className="mt-2 pl-4 border-l border-gray-300">
+                      {userTeamGroups[teamName].map(member => (
+                        <li key={member.employee_id} className="text-gray-700 text-sm">
+                          {member.employee_name} (ID: {member.employee_id})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Time Off Request Modal (for normal users) */}
+        {showTimeOffModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+            <div className="bg-white rounded-lg shadow-xl p-8 w-96">
+              <form onSubmit={handleSubmitTimeOffRequest}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Reason
+                  </label>
+                  <textarea
+                    value={requestReason}
+                    onChange={(e) => setRequestReason(e.target.value)}
+                    placeholder="Enter the reason for your time off request"
+                    required
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 resize-none"
+                    rows="4"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  />
+                </div>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                  >
+                    Submit Request
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   } else {
-    return <div className="max-w-6xl mx-auto p-4">Please log in to view the dashboard.</div>;
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        Please log in to view the dashboard.
+      </div>
+    );
   }
 };
 

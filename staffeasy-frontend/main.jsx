@@ -13,6 +13,7 @@ import Employees from "./pages/Employees.jsx";
 import AddEmployee from "./pages/AddEmployee.jsx";
 import EditEmployee from "./pages/EditEmployee.jsx";
 import TeamsPage from "./pages/TeamsPage.jsx";
+import TimeOffPage from "./pages/TimeOffPage.jsx";
 
 // Auth context provider
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/edit-employee/:id" element={<EditEmployee />} />
           <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/time-off" element={<TimeOffPage />} />
           
           {/* Catch-all route for undefined routes */}
           <Route path="*" element={

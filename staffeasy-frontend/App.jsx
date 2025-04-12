@@ -9,6 +9,7 @@ import Employees from "./pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EditEmployee from "./pages/EditEmployee";
 import TeamsPage from "./pages/TeamsPage";
+import TimeOffPage from "./pages/TimeOffPage";
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/edit-employee/:id" element={<EditEmployee />} />
           <Route path="/teams" element={<TeamsPage />} />
-          
+          <Route path="/time-off" element={<TimeOffPage />} />
   
           <Route path="*" element={
             <div className="text-center py-20">
