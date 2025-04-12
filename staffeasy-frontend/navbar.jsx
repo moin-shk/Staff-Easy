@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { supabase } from './supabaseClient';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -10,6 +11,12 @@ const Navbar = () => {
   
   const handleLogout = async () => {
     console.log('Logging out...');
+    // Call Supabase to sign out the user
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error during Supabase sign out:', error);
+    }
+    // Proceed with your context logout logic
     await logout();
     navigate('/login');
   };
@@ -62,37 +69,24 @@ const Navbar = () => {
                       >
                         Employees
                       </Link>
+                      
                       <Link 
                         to="/teams" 
                         className="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                       >
                         Teams
                       </Link>
-                      <Link 
-                        to="/analytics" 
-                        className="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        Analytics
-                      </Link>
                     </>
                   )}
                   
                   {/* Manager Links */}
                   {(user?.role === 'manager' || user?.role === 'admin') && (
-                    <>
-                      <Link 
-                        to="/time-off" 
-                        className="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        Time Off
-                      </Link>
-                      <Link 
-                        to="/payroll" 
-                        className="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        Payroll
-                      </Link>
-                    </>
+                    <Link 
+                      to="/time-off" 
+                      className="border-transparent text-gray-500 hover:border-blue-500 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      Time Off
+                    </Link>
                   )}
                 </>
               )}
@@ -128,21 +122,10 @@ const Navbar = () => {
                     aria-labelledby="user-menu-button"
                     tabIndex="-1"
                   >
-                    <div
-                      className="block px-4 py-2 text-sm text-gray-700"
-                      role="menuitem"
-                    >
+                    <div className="block px-4 py-2 text-sm text-gray-700" role="menuitem">
                       Signed in as <strong>{user?.username || user?.email}</strong>
                     </div>
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      role="menuitem"
-                      tabIndex="-1"
-                      id="user-menu-item-0"
-                    >
-                      Your Profile
-                    </Link>
+                    
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -183,7 +166,7 @@ const Navbar = () => {
               onClick={toggleMobileMenu}
             >
               <span className="sr-only">Open main menu</span>
-              {/* Heroicon name: outline/menu */}
+              {/* Heroicon: Menu */}
               <svg
                 className={`${mobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
                 xmlns="http://www.w3.org/2000/svg"
@@ -192,14 +175,9 @@ const Navbar = () => {
                 stroke="currentColor"
                 aria-hidden="true"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              {/* Heroicon name: outline/x */}
+              {/* Heroicon: X */}
               <svg
                 className={`${mobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
                 xmlns="http://www.w3.org/2000/svg"
@@ -208,12 +186,7 @@ const Navbar = () => {
                 stroke="currentColor"
                 aria-hidden="true"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
@@ -221,10 +194,7 @@ const Navbar = () => {
       </div>
       
       {/* Mobile menu */}
-      <div
-        className={`${mobileMenuOpen ? 'block' : 'hidden'} sm:hidden`}
-        id="mobile-menu"
-      >
+      <div className={`${mobileMenuOpen ? 'block' : 'hidden'} sm:hidden`} id="mobile-menu">
         <div className="pt-2 pb-3 space-y-1">
           <Link
             to="/"
@@ -257,31 +227,17 @@ const Navbar = () => {
                   >
                     Teams
                   </Link>
-                  <Link
-                    to="/analytics"
-                    className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                  >
-                    Analytics
-                  </Link>
                 </>
               )}
               
               {/* Manager Links */}
               {(user?.role === 'manager' || user?.role === 'admin') && (
-                <>
-                  <Link
-                    to="/time-off"
-                    className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                  >
-                    Time Off
-                  </Link>
-                  <Link
-                    to="/payroll"
-                    className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                  >
-                    Payroll
-                  </Link>
-                </>
+                <Link
+                  to="/time-off"
+                  className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                >
+                  Time Off
+                </Link>
               )}
             </>
           )}
