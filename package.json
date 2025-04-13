@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@remix-run/dev": "^2.16.5",
+    "@remix-run/node": "^2.16.5",
     "@supabase/supabase-js": "^2.49.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
