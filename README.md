@@ -33,7 +33,6 @@ StaffEasy is a comprehensive employee management system designed to simplify ope
 ### Prerequisites
 
 - Node.js (v14.x or higher)
-- MongoDB database (local or cloud instance)
 - npm or yarn package manager
 
 ### Installation
