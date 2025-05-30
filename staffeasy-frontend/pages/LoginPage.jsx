@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import LoginForm from '../features/auth/LoginForm';
 import { useAuth } from '../hooks/useAuth';
 
+
 export default function LoginPage() {
   const { isAuthenticated } = useAuth();
   
@@ -22,9 +23,9 @@ export default function LoginPage() {
         <LoginForm />
         
         <p className="text-center text-sm text-gray-600 mt-6">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline font-medium">
-            Register here
+          Forgot Password?{' '}
+          <Link to="/forgot-password"  className="text-blue-600 hover:underline font-medium">
+            Reset it here
           </Link>
         </p>
       </div>

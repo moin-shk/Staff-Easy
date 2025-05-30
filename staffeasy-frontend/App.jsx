@@ -1,5 +1,6 @@
+// App.jsx
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Routes, Route } from "react-router-dom";
 import Navbar from "./navbar";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -11,7 +12,10 @@ import EditEmployee from "./pages/EditEmployee";
 import TeamsPage from "./pages/TeamsPage";
 import TimeOffPage from "./pages/TimeOffPage";
 
-function App() {
+// 🔐 Auth Pages
+import ForgotPassword from "./pages/ForgotPasswordPage"; // Ensure correct path
+
+export default function App() {
   return (
     <>
       <Navbar />
@@ -26,7 +30,11 @@ function App() {
           <Route path="/edit-employee/:id" element={<EditEmployee />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/time-off" element={<TimeOffPage />} />
-  
+
+          {/* 🔐 Forgot Password */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          {/* 🚫 404 Page */}
           <Route path="*" element={
             <div className="text-center py-20">
               <h2 className="text-3xl font-bold text-gray-800 mb-4">Page Not Found</h2>
@@ -41,5 +49,3 @@ function App() {
     </>
   );
 }
-
-export default App;
