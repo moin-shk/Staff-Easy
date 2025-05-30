@@ -54,10 +54,8 @@ StaffEasy is a comprehensive employee management system designed to simplify ope
 3. Create a `.env` file in the root directory with the following variables:
 
    ```
-   REACT_APP_API_URL=http://localhost:5000/api
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   NEXTAUTH_URL=http://localhost:3000
+   VITE_SUPABASE_URL=<Your Supabase URL>
+   VITE_SUPABASE_ANON_KEY= <Your Anon Key>
    ```
 
 4. Start the development server:
