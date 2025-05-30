@@ -2,13 +2,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import InputField from "../../components/InputField";
-import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../supabaseClient"; 
 
 export default function LoginForm() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ employeeId: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -18,18 +17,61 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) {
-      setError("Email and password are required");
+
+    const { employeeId, password } = form;
+
+    if (!employeeId || !password) {
+      setError("Employee ID and password are required");
       return;
     }
-    setIsLoading(true);
-    const success = await login(form.email, form.password);
-    if (success) {
-      navigate("/dashboard");
-    } else {
-      setError("Invalid email or password.");
+
+    if (employeeId.length !== 7 || !/^\d+$/.test(employeeId)) {
+      setError("Employee ID must be exactly 7 digits.");
+      return;
     }
-    setIsLoading(false);
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Step 1: Look up the email from the employees table
+      const { data, error: dbError } = await supabase
+        .from("employee")
+        .select("email")
+        .eq("employee_id", employeeId)
+        .single();
+
+      if (dbError || !data) {
+        setError("Invalid Employee ID or password.");
+        setIsLoading(false);
+        return;
+      }
+
+      const { email } = data;
+
+      console.log("Fetched email for login:", email);
+
+      // Step 2: Use Supabase Auth to sign in with email and password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError("Invalid Employee ID or password.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Success!
+      setIsLoading(false);
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,11 +85,12 @@ export default function LoginForm() {
         </div>
       )}
       <InputField
-        label="Email"
-        type="email"
-        name="email"
-        value={form.email}
+        label="Employee ID"
+        type="text"
+        name="employeeId"
+        value={form.employeeId}
         onChange={handleChange}
+        placeholder="7-digit number"
         required
       />
       <InputField

@@ -19,24 +19,24 @@ export const useAuth = () => {
   }, []);
 
   const login = async (email, password) => {
-    // Query the "users" table to find a record that matches both email and password
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .eq("password", password)  // plain text compare
-      .single();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    if (error || !data) {
-      console.error("Login failed:", error);
-      return false;
-    }
-    // On success, store the user info locally
-    setUser(data);
-    setIsAuthenticated(true);
-    localStorage.setItem("staffeasy_user", JSON.stringify(data));
-    return true;
-  };
+  if (error) {
+    console.error("Login failed:", error.message);
+    return false;
+  }
+
+  const user = data.user;
+
+  setUser(user);
+  setIsAuthenticated(true);
+  localStorage.setItem("staffeasy_user", JSON.stringify(user));
+
+  return true;
+};
 
   const logout = async () => {
     // Clear state and local storage
